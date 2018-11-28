@@ -5,9 +5,7 @@ import android.support.v7.app.AppCompatActivity
 import android.widget.Button
 import android.widget.TableLayout
 import android.widget.TableRow
-import android.widget.Toast
 import java.util.*
-import kotlin.collections.ArrayList
 
 class GameActivity: AppCompatActivity() {
 
@@ -23,17 +21,19 @@ class GameActivity: AppCompatActivity() {
 
     inner class Ponto(val x: Int, val y : Int) : Button(this) {
         var bombasProximas = 0
-        set(value) {
+        /*set(value) {
             field = value
             if (text != "X")
                 text = value.toString()
-        }
+        }*/
         var bomba = false
-        set(value) {
+        /*set(value) {
             field = value
             if (value)
                 text = "X"
-        }
+        }*/
+
+        var aberto: Boolean = false
 
         init {
             super.setOnClickListener{view ->
@@ -41,13 +41,63 @@ class GameActivity: AppCompatActivity() {
                 if (!clickedButton.bomba)
                 {
                     //Abre os sem bomba juntos
+                    backintrackOpen(clickedButton.x, clickedButton.y)
                     //ou abre numero
                 }
                 else
                 {
-                    //game over
+                    val gameOverDialog = GameOverDialog()
+                    val bundle = Bundle()
+                    bundle.putCharSequence("text", "Game Over")
+                    gameOverDialog.arguments = bundle
+                    gameOverDialog.show(fragmentManager, "")
+                    //gameOverDialog.dialog.window.setBackgroundDrawable(ColorDrawable(android.graphics.Color.TRANSPARENT))
+                    //game overm
                 }
+                testWin()
 
+            }
+            super.setLongClickable(true)
+            super.setOnLongClickListener{view ->
+                val clickedButton = view as Ponto
+                if (clickedButton.text == "")
+                    clickedButton.text = "X"
+                else if (clickedButton.text == "X" )
+                    clickedButton.text = ""
+                testWin()
+                true
+            }
+        }
+
+        fun backintrackOpen(x: Int, y: Int)
+        {
+            val testButton = campo[x][y]
+
+            if (testButton.text != "X")
+                testButton.text = testButton.bombasProximas.toString()
+            if (testButton.bombasProximas == 0 && !testButton.aberto && testButton.text != "X")
+            {
+                testButton.aberto = true
+                if (x-1 >= 0)
+                {
+                    if (y-1 >= 0)
+                        backintrackOpen(x-1, y-1)
+                    backintrackOpen(x-1, y)
+                    if (y+1 < campo.size)
+                        backintrackOpen(x-1, y+1)
+                }
+                if (y-1 >= 0)
+                    backintrackOpen(x, y-1)
+                if (y+1 < campo.size)
+                    backintrackOpen(x, y+1)
+                if (x+1 < campo.size)
+                {
+                    if (y-1 >= 0)
+                        backintrackOpen(x+1, y-1)
+                    backintrackOpen(x+1, y)
+                    if (y+1 < campo.size)
+                        backintrackOpen(x+1, y+1)
+                }
             }
         }
     }
@@ -103,7 +153,7 @@ class GameActivity: AppCompatActivity() {
 
                 button.layoutParams = layout
 
-                button.text = "0"
+                button.text = ""
                 row.addView(button)
 
 
@@ -165,5 +215,30 @@ class GameActivity: AppCompatActivity() {
         }
 
         return bombs
+    }
+
+    fun testWin() {
+        var winning = true
+        bombas.forEach {bt ->
+            if (bt.text != "X")
+                winning = false
+
+        }
+        campo.forEach { col ->
+            col.forEach { bt ->
+                if (bt.text == "X" && !bt.bomba)
+                {
+                    winning = false
+                }
+            }
+        }
+        if (winning)
+        {
+            val gameOverDialog = GameOverDialog()
+            val bundle = Bundle()
+            bundle.putCharSequence("text", "Você Venceu \\o/")
+            gameOverDialog.arguments = bundle
+            gameOverDialog.show(fragmentManager, "")
+        }
     }
 }
