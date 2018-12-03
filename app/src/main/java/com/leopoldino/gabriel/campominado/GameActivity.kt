@@ -5,6 +5,7 @@ import android.support.v7.app.AppCompatActivity
 import android.widget.Button
 import android.widget.TableLayout
 import android.widget.TableRow
+import android.widget.TextView
 import java.util.*
 
 class GameActivity: AppCompatActivity() {
@@ -21,22 +22,18 @@ class GameActivity: AppCompatActivity() {
 
     inner class Ponto(val x: Int, val y : Int) : Button(this) {
         var bombasProximas = 0
-        /*set(value) {
-            field = value
-            if (text != "X")
-                text = value.toString()
-        }*/
         var bomba = false
-        /*set(value) {
-            field = value
-            if (value)
-                text = "X"
-        }*/
+
 
         var aberto: Boolean = false
 
         init {
+            //Click na matriz de botões
             super.setOnClickListener{view ->
+                if (firstClick) {
+                    iniciarTimer()
+                    firstClick = false
+                }
                 val clickedButton = view as Ponto
                 if (!clickedButton.bomba)
                 {
@@ -46,13 +43,7 @@ class GameActivity: AppCompatActivity() {
                 }
                 else
                 {
-                    val gameOverDialog = GameOverDialog()
-                    val bundle = Bundle()
-                    bundle.putCharSequence("text", "Game Over")
-                    gameOverDialog.arguments = bundle
-                    gameOverDialog.show(fragmentManager, "")
-                    //gameOverDialog.dialog.window.setBackgroundDrawable(ColorDrawable(android.graphics.Color.TRANSPARENT))
-                    //game overm
+                    gameover()
                 }
                 testWin()
 
@@ -105,6 +96,9 @@ class GameActivity: AppCompatActivity() {
     lateinit var campo : Array<Array<Ponto>>
     lateinit var bombas : Array<Ponto>
 
+    lateinit var contador : TextView
+    var firstClick = true
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_game)
@@ -124,6 +118,7 @@ class GameActivity: AppCompatActivity() {
             DIFFICULT.HARD -> putBombs(13, 13)
         }
 
+        contador = findViewById(R.id.tv_timer)
 
     }
 
@@ -234,11 +229,47 @@ class GameActivity: AppCompatActivity() {
         }
         if (winning)
         {
-            val gameOverDialog = GameOverDialog()
-            val bundle = Bundle()
-            bundle.putCharSequence("text", "Você Venceu \\o/")
-            gameOverDialog.arguments = bundle
-            gameOverDialog.show(fragmentManager, "")
+            win()
         }
+    }
+
+    val counterTask = object : TimerTask() {
+        override fun run() {
+            countTime += 1
+            runOnUiThread { contador.text = countTime.toString() }
+        }
+    }
+
+    fun gameover()
+    {
+        val gameOverDialog = GameOverDialog()
+        val bundle = Bundle()
+        bundle.putCharSequence("text", "Game Over")
+        gameOverDialog.arguments = bundle
+        gameOverDialog.show(fragmentManager, "")
+        stoptimer()
+    }
+
+    fun win()
+    {
+        val gameOverDialog = GameOverDialog()
+        val bundle = Bundle()
+        bundle.putCharSequence("text", "Você Venceu \\o/")
+        gameOverDialog.arguments = bundle
+        gameOverDialog.show(fragmentManager, "")
+        stoptimer()
+    }
+
+    var countTime = 0
+
+    lateinit var timer : Timer
+    fun iniciarTimer() {
+        timer = Timer("Counter")
+        countTime = 0
+        timer.scheduleAtFixedRate(counterTask, 1000, 1000)
+    }
+
+    fun stoptimer() {
+        timer.cancel()
     }
 }
