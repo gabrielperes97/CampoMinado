@@ -20,6 +20,7 @@ class GameActivity : AppCompatActivity() {
 
     lateinit var table : Array<Array<Field>>
     lateinit var tvCounter : TextView
+    lateinit var btReset : Button
 
     lateinit var game : Minefield
 
@@ -51,6 +52,8 @@ class GameActivity : AppCompatActivity() {
                 bundle.putCharSequence("text", "Game Over")
                 gameOverDialog.arguments = bundle
                 gameOverDialog.show(fragmentManager, "")
+
+                btReset.text = "X("
             }
         }
 
@@ -61,6 +64,8 @@ class GameActivity : AppCompatActivity() {
                 bundle.putCharSequence("text", "Você Venceu \\o/")
                 gameOverDialog.arguments = bundle
                 gameOverDialog.show(fragmentManager, "")
+
+                btReset.text = ":)"
             }
         }
 
@@ -72,20 +77,31 @@ class GameActivity : AppCompatActivity() {
 
         difficult = intent.getSerializableExtra("Difficult") as DIFFICULT
         grid = findViewById(R.id.tl_game_grid)
-
-        table = when(difficult){
-            DIFFICULT.EASY -> makeButtons(7)
-            DIFFICULT.MEDIUM -> makeButtons(10)
-            DIFFICULT.HARD -> makeButtons(10)
-        }
-
+        btReset = findViewById(R.id.btReset)
         tvCounter = findViewById(R.id.tv_timer)
+
+        makeScreen()
 
         game = when(difficult){
             DIFFICULT.EASY -> Minefield(size = 7, numBombs = 7, ui = gameInterface)
             DIFFICULT.MEDIUM -> Minefield(size = 10, numBombs = 10, ui = gameInterface)
             DIFFICULT.HARD -> Minefield(size = 10, numBombs = 15, ui = gameInterface)
         }
+
+        btReset.setOnClickListener {
+            game.reset()
+            makeScreen()
+        }
+
+    }
+
+    private fun makeScreen() {
+        table = when(difficult){
+            DIFFICULT.EASY -> makeButtons(7)
+            DIFFICULT.MEDIUM -> makeButtons(10)
+            DIFFICULT.HARD -> makeButtons(10)
+        }
+        btReset.text = ":o"
 
     }
 

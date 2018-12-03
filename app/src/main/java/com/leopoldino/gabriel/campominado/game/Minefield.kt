@@ -4,10 +4,12 @@ import java.util.*
 
 class Minefield (val size: Int, val numBombs: Int, val ui : MinefieldInterface) {
 
-    val bombs: Array<Field>
+    var bombs: Array<Field>
     var firstClick = true
     var countTime = 0
     lateinit var timer : Timer
+
+    var gameIsOver = false
 
     val table : Array<Array<Field>>
     val counterTask = object : TimerTask() {
@@ -25,7 +27,6 @@ class Minefield (val size: Int, val numBombs: Int, val ui : MinefieldInterface) 
         }
         bombs = putBombs()
     }
-
 
     private fun putBombs() : Array<Field> {
         val random = Random()
@@ -79,32 +80,32 @@ class Minefield (val size: Int, val numBombs: Int, val ui : MinefieldInterface) 
 
     fun click(x : Int, y: Int)
     {
-        if (firstClick) {
-            startTimer()
-            firstClick = false
-        }
+        if (!gameIsOver) {
+            if (firstClick) {
+                startTimer()
+                firstClick = false
+            }
 
-        if (!table[x][y].bomb)
-        {
-            backintrackOpen(x,y)
+            if (!table[x][y].bomb) {
+                backintrackOpen(x, y)
+            } else {
+                gameover()
+            }
+            testWin()
         }
-        else
-        {
-            gameover()
-        }
-        testWin()
     }
 
     fun markAsBomb(x: Int, y: Int)
     {
-        if (table[x][y].status == Field.Status.CLOSED) {
-            table[x][y].status = Field.Status.MARKED
-            ui.markAsBomb(x, y)
-        }
-        else{
-            if (table[x][y].status == Field.Status.MARKED) {
-                table[x][y].status = Field.Status.CLOSED
-                ui.close(x, y)
+        if (!gameIsOver) {
+            if (table[x][y].status == Field.Status.CLOSED) {
+                table[x][y].status = Field.Status.MARKED
+                ui.markAsBomb(x, y)
+            } else {
+                if (table[x][y].status == Field.Status.MARKED) {
+                    table[x][y].status = Field.Status.CLOSED
+                    ui.close(x, y)
+                }
             }
         }
 
@@ -184,12 +185,34 @@ class Minefield (val size: Int, val numBombs: Int, val ui : MinefieldInterface) 
     {
         ui.gameover()
         stopTimer()
+        gameIsOver = true
+
+        bombs.forEach { bomb ->
+            ui.bomb(bomb.x, bomb.y)
+        }
     }
 
     private fun win()
     {
         ui.win()
         stopTimer()
+        gameIsOver = true
+    }
+
+    fun reset()
+    {
+        stopTimer()
+        table.forEach { col ->
+            col.forEach { field ->
+                field.bomb = false
+                field.status = Field.Status.CLOSED
+                field.bombsNear = 0
+            }
+        }
+        bombs = putBombs()
+        gameIsOver = false
+        countTime = 0
+
     }
 }
 

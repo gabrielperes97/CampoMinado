@@ -19,6 +19,4 @@ class Field(val x:Int, val y:Int) {
     var bombsNear = 0
 
 
-
-
 }
